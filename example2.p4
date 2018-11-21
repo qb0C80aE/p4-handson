@@ -46,8 +46,6 @@ header ipv4_t {
 }
 
 // メタデータ
-// 出力ポート決定などはメタデータを使うことになるので、以下を読んでおく。
-// https://github.com/p4lang/behavioral-model/blob/master/docs/simple_switch.md
 struct metadata {
 }
 
@@ -145,7 +143,7 @@ control ingress(inout headers hdr,
             NoAction;
         }
         const entries = {
-            0xffffffffffff : arp_sendback();
+            0xffffffffffff : arp_sendback(); // MACやIPの文字列表記からキャストするやりかたがわからなかった…
         }
         default_action = NoAction();
     }
@@ -162,8 +160,8 @@ control ingress(inout headers hdr,
             NoAction;
         }
         const entries = {
-            0x0a000001 : ipv4_forward(0x1054ff990012, 1);
-            0x0a000101 : ipv4_forward(0x1054ff990022, 2);
+            0x0a000001 : ipv4_forward(0x1054ff990332, 1);
+            0x0a000101 : ipv4_forward(0x1054ff990442, 2);
         }
         default_action = drop();
     }

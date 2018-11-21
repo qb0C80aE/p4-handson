@@ -22,8 +22,6 @@ struct metadata {
 // ヘッダスタック
 struct headers {
     ethernet_t   ethernet;
-    arp_t        arp;
-    ipv4_t       ipv4;
 }
 
 // parser
@@ -52,20 +50,24 @@ control verifyChecksum(inout headers hdr, inout metadata meta) {
 control ingress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
+
     // 全部broadcast
     action broadcast() {
+        // broadcastする場合はmulticastを使うため、simple_switchに対してmulticast groupを設定しておく必要がある
+        // 後述のsimple_switch_CLIで設定する
         standard_metadata.mcast_grp = 1;
     }
 
     // エントリは固定にする
     table bcast {
-        default_action = broadcast;
+        actions = {
+            broadcast;
+        }
+        default_action = broadcast; // table miss扱い
     }
     
     apply {
-        if (hdr.ethernet.isValid()) {
-            bcast.apply();
-        }
+        bcast.apply();
     }
 }
 
@@ -81,10 +83,11 @@ control computeChecksum(inout headers  hdr, inout metadata meta) {
 
 control deparse(packet_out packet, in headers hdr) {
     apply {
-        packet.emit(hdr.ethernet);
+        packet.emit(hdr.ethernet); // 組み立て
     }
 }
 
+// v1modelを利用
 V1Switch(
 parse(),
 verifyChecksum(),
