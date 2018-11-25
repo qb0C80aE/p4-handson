@@ -37,6 +37,7 @@ parser parse(packet_in packet,
     }
 
     state parse_ethernet {
+        packet.extract(hdr.ethernet);
         transition accept;
     }
 }
